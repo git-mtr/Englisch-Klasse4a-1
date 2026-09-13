@@ -76,6 +76,16 @@
       font-size: 1.1em;
     }
 
+    .all-options {
+      display: none;
+      margin-top: 1em;
+      font-size: 1.1em;
+    }
+
+    .all-options label {
+      margin: 0 1em;
+    }
+
     .topic-select {
       min-width: 230px;
       padding: 0.7em 1.2em;
@@ -96,7 +106,7 @@
 
     <h1>Englisch lernen</h1>
 
-    <div class="radio-group">
+    <div class="radio-group" id="directionGroup">
 
       <label>
         <input
@@ -129,6 +139,7 @@
         class="topic-select"
         onchange="changeTopic()"
       >
+        <option value="all">All</option>
         <option value="begruessung">Begrüßung</option>
         <option value="alter">Alter</option>
         <option value="nahrung">Nahrung</option>
@@ -149,6 +160,18 @@
         <option value="adjektive">Adjektive</option>
         <option value="tiere">Tiere</option>
       </select>
+
+      <div id="allOptions" class="all-options">
+        <label>
+          <input type="checkbox" id="randomEnglish" checked onchange="resetAllRandom()">
+          🇬🇧 Englisch
+        </label>
+
+        <label>
+          <input type="checkbox" id="randomGerman" checked onchange="resetAllRandom()">
+          🇩🇪 Deutsch
+        </label>
+      </div>
 
     </div>
 
@@ -715,10 +738,12 @@ const topics = {
 
 
 /*
- * Aktueller Index
+ * Aktueller Index / All-Modus
  */
 
 let currentWordIndex = 0;
+let allHistory = [];
+let allHistoryIndex = -1;
 
 
 /*
@@ -731,6 +756,10 @@ function getCurrentArray() {
     document.getElementById(
       "topicSelect"
     ).value;
+
+  if (topic === "all") {
+    return Object.values(topics).flat();
+  }
 
   return topics[topic];
 
@@ -751,21 +780,111 @@ function getDirection() {
 
 
 /*
+ * Zufälligen Eintrag für All erzeugen
+ */
+
+function createRandomAllEntry() {
+
+  const allWords = Object.values(topics).flat();
+
+  const englishChecked =
+    document.getElementById("randomEnglish").checked;
+
+  const germanChecked =
+    document.getElementById("randomGerman").checked;
+
+  if (!englishChecked && !germanChecked) {
+    return null;
+  }
+
+  const word =
+    allWords[Math.floor(Math.random() * allWords.length)];
+
+  let language;
+
+  if (englishChecked && germanChecked) {
+    language = Math.random() < 0.5 ? "en" : "de";
+  } else if (englishChecked) {
+    language = "en";
+  } else {
+    language = "de";
+  }
+
+  return {
+    word: word,
+    language: language
+  };
+
+}
+
+
+/*
+ * Zufälligen All-Eintrag zur Historie hinzufügen
+ */
+
+function addRandomAllEntry() {
+
+  const entry = createRandomAllEntry();
+
+  if (!entry) {
+    document.getElementById(
+      "songText"
+    ).innerText = "Bitte Englisch und/oder Deutsch auswählen.";
+
+    document.getElementById(
+      "feedbackArea"
+    ).innerText = "";
+
+    return false;
+  }
+
+  if (allHistoryIndex < allHistory.length - 1) {
+    allHistory = allHistory.slice(0, allHistoryIndex + 1);
+  }
+
+  allHistory.push(entry);
+  allHistoryIndex = allHistory.length - 1;
+
+  return true;
+
+}
+
+
+/*
  * Aktuellen Eintrag anzeigen
  */
 
 function showCurrentWord() {
 
-  const currentArray =
-    getCurrentArray();
+  const topic =
+    document.getElementById("topicSelect").value;
 
-  const word =
-    currentArray[currentWordIndex];
+  if (topic === "all") {
+
+    if (allHistoryIndex < 0) {
+      if (!addRandomAllEntry()) {
+        return;
+      }
+    }
+
+    const entry = allHistory[allHistoryIndex];
+
+    document.getElementById(
+      "songText"
+    ).innerText =
+      entry.language === "en"
+        ? entry.word.en
+        : entry.word.de;
+
+    return;
+  }
+
+  const currentArray = getCurrentArray();
+  const word = currentArray[currentWordIndex];
 
   document.getElementById(
     "songText"
   ).innerText =
-
     getDirection() === "en-de"
       ? word.en
       : word.de;
@@ -780,6 +899,37 @@ function showCurrentWord() {
 function changeTopic() {
 
   currentWordIndex = 0;
+  allHistory = [];
+  allHistoryIndex = -1;
+
+  const isAll =
+    document.getElementById("topicSelect").value === "all";
+
+  document.getElementById(
+    "allOptions"
+  ).style.display = isAll ? "block" : "none";
+
+  document.getElementById(
+    "directionGroup"
+  ).style.display = isAll ? "none" : "block";
+
+  document.getElementById(
+    "feedbackArea"
+  ).innerText = "";
+
+  showCurrentWord();
+
+}
+
+
+/*
+ * All-Zufall nach Änderung einer Checkbox zurücksetzen
+ */
+
+function resetAllRandom() {
+
+  allHistory = [];
+  allHistoryIndex = -1;
 
   document.getElementById(
     "feedbackArea"
@@ -813,8 +963,29 @@ function resetUI() {
 
 function nextWord() {
 
-  const currentArray =
-    getCurrentArray();
+  const topic =
+    document.getElementById("topicSelect").value;
+
+  if (topic === "all") {
+
+    if (allHistoryIndex < allHistory.length - 1) {
+      allHistoryIndex++;
+    } else {
+      if (!addRandomAllEntry()) {
+        return;
+      }
+    }
+
+    showCurrentWord();
+
+    document.getElementById(
+      "feedbackArea"
+    ).innerText = "";
+
+    return;
+  }
+
+  const currentArray = getCurrentArray();
 
   currentWordIndex =
     (currentWordIndex + 1)
@@ -835,8 +1006,24 @@ function nextWord() {
 
 function prevWord() {
 
-  const currentArray =
-    getCurrentArray();
+  const topic =
+    document.getElementById("topicSelect").value;
+
+  if (topic === "all") {
+
+    if (allHistoryIndex > 0) {
+      allHistoryIndex--;
+      showCurrentWord();
+    }
+
+    document.getElementById(
+      "feedbackArea"
+    ).innerText = "";
+
+    return;
+  }
+
+  const currentArray = getCurrentArray();
 
   currentWordIndex =
     (
@@ -861,19 +1048,34 @@ function prevWord() {
 
 function checkTranslation() {
 
-  const currentArray =
-    getCurrentArray();
+  const topic =
+    document.getElementById("topicSelect").value;
 
-  const word =
-    currentArray[currentWordIndex];
+  if (topic === "all") {
 
-  const direction =
-    getDirection();
+    if (allHistoryIndex < 0) {
+      return;
+    }
+
+    const entry = allHistory[allHistoryIndex];
+
+    document.getElementById(
+      "feedbackArea"
+    ).innerText =
+      entry.language === "en"
+        ? entry.word.de
+        : entry.word.en;
+
+    return;
+  }
+
+  const currentArray = getCurrentArray();
+  const word = currentArray[currentWordIndex];
+  const direction = getDirection();
 
   document.getElementById(
     "feedbackArea"
   ).innerText =
-
     direction === "en-de"
       ? word.de
       : word.en;
@@ -885,10 +1087,9 @@ function checkTranslation() {
  * Initialisieren
  */
 
-resetUI();
+changeTopic();
 
 </script>
 
 </body>
 </html>
-
