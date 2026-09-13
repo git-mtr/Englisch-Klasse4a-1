@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -147,6 +148,7 @@
         <option value="wetter">Wetter</option>
         <option value="allgemein">Allgemein</option>
         <option value="adjektive">Adjektive</option>
+        <option value="tiere">Tiere</option>
       </select>
 
     </div>
@@ -621,10 +623,11 @@ const wetter = [
   { en: "cold", de: "kalt" },
   { en: "warm", de: "warm" },
   { en: "hot", de: "heiß" },
-  { en: "thundery", de: "gewittrig" },
+  { en: "thundery", de: "Gewitter" },
   { en: "changeable", de: "wechselhaft" },
   { en: "rainbow", de: "Regenbogen" },
 
+  { en: "thundery", de: "gewittrig" },
   { en: "cool", de: "kühl" },
   { en: "freezing", de: "eiskalt" },
   { en: "It's hailing.", de: "Es hagelt." },
@@ -663,6 +666,27 @@ const adjektive = [
 
 
 /*
+ * 19. Tiere
+ */
+
+const tiere = [
+
+  { en: "animals", de: "Tiere" },
+  { en: "horse", de: "Pferd" },
+  { en: "dog", de: "Hund" },
+  { en: "cat", de: "Katze" },
+  { en: "crocodile", de: "Krokodil" },
+  { en: "chicken", de: "Huhn" },
+  { en: "pic", de: "Schwein" },
+  { en: "donkey", de: "Esel" },
+  { en: "elefant", de: "Elefant" },
+  { en: "birth", de: "vogel" },
+  { en: "raven", de: "rabe" }
+
+];
+
+
+/*
  * Zuordnung Pulldown -> Array
  */
 
@@ -685,7 +709,8 @@ const topics = {
   jahreszeiten: jahreszeiten,
   wetter: wetter,
   allgemein: allgemein,
-  adjektive: adjektive
+  adjektive: adjektive,
+  tiere: tiere
 
 };
 
@@ -867,3 +892,4 @@ resetUI();
 
 </body>
 </html>
+```
